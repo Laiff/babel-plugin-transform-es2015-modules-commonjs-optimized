@@ -1,6 +1,6 @@
-/* eslint max-len: 0, prefer-template: 0, global-require: 0, no-shadow: 0 */
+/* eslint max-len: 0, prefer-template: 0, global-require: 0, no-shadow: 0, guard-for-in: 0, no-return-assign: 0, no-restricted-syntax: 0 */
 
-import {basename, extname} from 'path'
+import { basename, extname } from 'path'
 import template from 'babel-template'
 import * as t from 'babel-types'
 
@@ -263,10 +263,10 @@ export default function () {
 
               const key = path.node.source.value
               const importsEntry = imports[key] || {
-                  specifiers: [],
-                  maxBlockHoist: 0,
-                  loc: path.node.loc
-                }
+                specifiers: [],
+                maxBlockHoist: 0,
+                loc: path.node.loc
+              }
 
               importsEntry.specifiers.push(...path.node.specifiers)
 
