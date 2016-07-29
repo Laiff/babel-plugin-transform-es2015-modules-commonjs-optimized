@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-transform-es2015-modules-commonjs-optimized",
-  "version": "6.11.5",
+  "version": "6.11.6",
   "description": "Optimized version for transform es6 modules to commonjs",
   "main": "./lib/index.js",
   "scripts": {
@@ -55,6 +55,7 @@
     "babel-core": "^6.10.4",
     "babel-eslint": "^6.1.2",
     "babel-helper-plugin-test-runner": "^6.8.0",
+    "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-external-helpers": "^6.8.0",
     "babel-plugin-istanbul": "^1.0.3",
     "babel-plugin-transform-es2015-block-scoping": "^6.10.1",
