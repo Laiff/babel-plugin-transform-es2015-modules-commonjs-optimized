@@ -26,7 +26,6 @@
  will run all tests in the group. For example:
 
  mocha test/index.js --path fixtures/interop/imports-hoisting     // run just test fixtures/interop/imports-hoisting
- mocha test/index.js --path nomangle/interop                      // run all tests under nomangle/interop
 
  */
 

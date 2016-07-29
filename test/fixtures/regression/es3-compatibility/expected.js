@@ -4,12 +4,14 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _foo = require('foo');
+function _defaultAccessor(obj) {
+  return obj['default'];
+}
 
-var _foo2 = _interopRequireDefault(_foo);
+var _foo = _interopRequireDefault(require('foo'));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-console.log(_foo2['default']);
+console.log(_defaultAccessor(_foo));
 
 exports['default'] = 5;

@@ -1,8 +1,12 @@
 "use strict";
 
+function _defaultAccessor(obj) {
+  return obj.default;
+}
+
 var _foo = require("foo");
 
-_foo.default;
-_foo.default;
+_defaultAccessor(_foo);
+_defaultAccessor(_foo);
 _foo.foo3;
 (0, _foo.foo3)();

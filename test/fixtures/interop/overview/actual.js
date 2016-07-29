@@ -12,3 +12,4 @@ export var test = 5;
 bar;
 bar2;
 foo;
+foo();

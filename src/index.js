@@ -43,11 +43,18 @@ const buildExportAll = template(`
   });
 `)
 
-const buildAccessDefault = template(`
-  function defaultM(obj) {
-    return obj.default;
-  }
-`)
+function buildDefaultAccessor() {
+  const ref = t.identifier('_defaultAccessor')
+  return [
+    ref,
+    t.functionDeclaration(
+      ref,
+      [t.identifier('obj')],
+      t.blockStatement([
+        t.returnStatement(t.memberExpression(t.identifier('obj'), t.identifier('default')))
+      ])
+    )]
+}
 
 const THIS_BREAK_KEYS = ['FunctionExpression', 'FunctionDeclaration', 'ClassProperty', 'ClassMethod', 'ObjectMethod']
 
@@ -63,7 +70,7 @@ export default function () {
       // redeclared in this scope
       if (this.scope.getBinding(name) !== path.scope.getBinding(name)) return
 
-      if (path.parentPath.isCallExpression({ callee: path.node })) {
+      if (path.parentPath.isCallExpression({ callee: path.node }) && !t.isCallExpression(remap)) {
         path.replaceWith(t.sequenceExpression([t.numericLiteral(0), remap]))
       } else {
         path.replaceWith(remap)
@@ -163,6 +170,7 @@ export default function () {
 
           let hasExports = false
           let hasImports = false
+          let defaultAccessor = false
 
           const body:Array<Object> = path.get('body')
           const imports = Object.create(null)
@@ -200,6 +208,36 @@ export default function () {
             topNodes.push(varDecl)
 
             return requires[source] = ref
+          }
+
+          function addInlineRequire(source, blockHoist) {
+            const ref = path.scope.generateUidIdentifier(basename(source, extname(source)))
+
+            const reqDecl = buildRequire(
+              t.stringLiteral(source)
+            ).expression
+
+            // Copy location from the original import statement for sourcemap
+            // generation.
+            if (imports[source]) {
+              reqDecl.loc = imports[source].loc
+            }
+
+            if (typeof blockHoist === 'number' && blockHoist > 0) {
+              reqDecl._blockHoist = blockHoist
+            }
+
+            return [ref, reqDecl]
+          }
+
+          function ensureDefaultAccessor() {
+            if (!defaultAccessor) {
+              const [ref, accessor] = buildDefaultAccessor()
+              topNodes.unshift(accessor)
+              defaultAccessor = ref
+            }
+
+            return defaultAccessor
           }
 
           function addTo(obj, key, arr) {
@@ -355,7 +393,25 @@ export default function () {
           for (const source in imports) {
             const { specifiers, maxBlockHoist } = imports[source]
             if (specifiers.length) {
-              if (specifiers.length === 1 && t.isImportDefaultSpecifier(specifiers[0])) {
+              if (specifiers.length === 1 && (t.isImportDefaultSpecifier(specifiers[0]) || (specifiers[0].imported && specifiers[0].imported.name === 'default'))) {
+                specifiers[0] = t.importSpecifier(specifiers[0].local, t.identifier('default'))
+                const [uid, req] = addInlineRequire(source, maxBlockHoist)
+                const varDecl = t.variableDeclaration('var', [
+                  t.variableDeclarator(
+                    uid,
+                    t.callExpression(
+                      this.addHelper('interopRequireDefault'),
+                      [req]
+                    )
+                  )
+                ])
+
+                if (maxBlockHoist > 0) {
+                  varDecl._blockHoist = maxBlockHoist
+                }
+
+                topNodes.push(varDecl)
+                remaps[specifiers[0].local.name] = t.callExpression(ensureDefaultAccessor(), [uid])
               } else {
                 const uid = addRequire(source, maxBlockHoist)
 
@@ -413,8 +469,10 @@ export default function () {
 
                         topNodes.push(varDecl)
                       }
+                      remaps[specifier.local.name] = t.callExpression(ensureDefaultAccessor(), [target])
+                    } else {
+                      remaps[specifier.local.name] = t.memberExpression(target, t.cloneWithoutLoc(specifier.imported))
                     }
-                    remaps[specifier.local.name] = t.memberExpression(target, t.cloneWithoutLoc(specifier.imported))
                   }
                 }
               }
