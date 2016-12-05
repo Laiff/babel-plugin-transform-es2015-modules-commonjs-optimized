@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-transform-es2015-modules-commonjs-optimized",
-  "version": "6.11.6",
+  "version": "6.16.0",
   "description": "Optimized version for transform es6 modules to commonjs",
   "main": "./lib/index.js",
   "scripts": {

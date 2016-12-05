@@ -169,6 +169,8 @@ export default function () {
           scope.rename('require')
 
           let hasExports = false
+          let hasExportDefault = false
+          let hasExportNamed = false
           let hasImports = false
           let defaultAccessor = false
 
@@ -281,6 +283,7 @@ export default function () {
 
               path.remove()
             } else if (path.isExportDefaultDeclaration()) {
+              hasExportDefault = true
               const declaration = path.get('declaration')
               if (declaration.isFunctionDeclaration()) {
                 const id = declaration.node.id
@@ -314,6 +317,11 @@ export default function () {
                 path.parentPath.requeue(path.get('expression.left'))
               }
             } else if (path.isExportNamedDeclaration()) {
+              if (path.node.specifiers.length === 1 && path.node.specifiers[0].exported.name === 'default') {
+                hasExportDefault = true
+              } else {
+                hasExportNamed = true
+              }
               const declaration = path.get('declaration')
               if (declaration.node) {
                 if (declaration.isFunctionDeclaration()) {
@@ -506,6 +514,17 @@ export default function () {
             declar._blockHoist = 3
 
             topNodes.unshift(declar)
+          }
+
+          if (hasExportDefault && !hasExportNamed) {
+            path.pushContainer('body', [
+              t.expressionStatement(
+                t.assignmentExpression('=',
+                  t.memberExpression(t.identifier('module'), t.identifier('exports')),
+                  t.callExpression(ensureDefaultAccessor(), [t.identifier('exports')])
+                )
+              )
+            ])
           }
 
           path.unshiftContainer('body', topNodes)

@@ -15,3 +15,5 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 console.log(_defaultAccessor(_foo));
 
 exports['default'] = 5;
+
+module.exports = _defaultAccessor(exports);
